@@ -18,7 +18,7 @@
     },
     {
       "name": "agent-os",
-      "source": "github:buildermethods/agent-os",
+      "source": "https://github.com/buildermethods/agent-os",
       "description": "Spec-driven development with structured task workflows"
     },
     {
