@@ -14,23 +14,17 @@
       "name": "example-versent-toolkit",
       "description": "EXAMPLE: Template toolkit plugin - copy this to create your own",
       "version": "1.0.0",
-      "path": "./plugins/example-versent-toolkit"
+      "source": "./plugins/example-versent-toolkit"
     },
     {
       "name": "agent-os",
-      "source": {
-        "source": "github",
-        "repo": "buildermethods/agent-os"
-      },
+      "source": "github:buildermethods/agent-os",
       "description": "Spec-driven development with structured task workflows"
     },
     {
       "name": "professor-frink",
       "source": "./plugins/professor-frink",
-      "description": "Autonomous multi-session task execution with HITL checkpoints",
-      "dependencies": [
-        "agent-os"
-      ]
+      "description": "Autonomous multi-session task execution with HITL checkpoints"
     }
   ]
 }
