@@ -1,0 +1,49 @@
+{
+  "name": "professor-frink",
+  "version": "0.1.0",
+  "description": "Autonomous multi-session Claude Code plugin with HITL checkpoints and self-healing validation",
+  "author": "Versent",
+  "license": "MIT",
+  "main": "index.js",
+  "bin": {
+    "frink": "./bin/frink-orchestrator.sh"
+  },
+  "scripts": {
+    "test": "echo \"Tests not yet implemented\" && exit 0",
+    "lint": "echo \"Lint not yet configured\" && exit 0"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "plugin",
+    "autonomous",
+    "agent-os",
+    "multi-session",
+    "hitl"
+  ],
+  "files": [
+    ".claude-plugin/",
+    "commands/",
+    "hooks/",
+    "skills/",
+    "agents/",
+    "bin/",
+    "lib/",
+    "templates/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/versent/professor-frink"
+  },
+  "peerDependencies": {
+    "agent-os": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "agent-os": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,72 @@
+# Professor Frink HITL Checkpoint Configuration Template
+#
+# Copy this to .frink/checkpoints.yml and customize for your project.
+
+checkpoints:
+  # ============================================
+  # Post-Initialization Checkpoint
+  # ============================================
+  # Review the project foundation before heavy implementation begins.
+  # Good time to verify directory structure, configs, and tooling.
+  - id: post_initialization
+    description: "Review generated artifacts before implementation begins"
+    trigger: after_task_group_1
+    required: true
+
+  # ============================================
+  # Pre-Credentials Checkpoint
+  # ============================================
+  # Pause before tasks that require external services.
+  # Human adds API keys, database URLs, etc.
+  - id: pre_credentials
+    description: "Add API keys and secrets before infrastructure deployment"
+    trigger: before_task_group_4
+    required: true
+    manual_setup:
+      - "Add AWS_ACCESS_KEY_ID to environment"
+      - "Add AWS_SECRET_ACCESS_KEY to environment"
+      - "Set AWS_REGION (default: us-east-1)"
+      - "Configure any other required API keys"
+
+  # ============================================
+  # Pre-Deployment Checkpoint
+  # ============================================
+  # Final review before production deployment.
+  # Verify everything is ready for real users.
+  - id: pre_deployment
+    description: "Final review before production deployment"
+    trigger: before_final_task
+    required: true
+
+# ============================================
+# Trigger Syntax Reference
+# ============================================
+#
+# after_task_group_N  - After completing all tasks in group N
+# before_task_group_N - Before starting first task in group N
+# after_task_X.Y      - After completing specific task X.Y
+# before_task_X.Y     - Before starting specific task X.Y
+# before_final_task   - Before the last task in the queue
+
+# ============================================
+# Optional Checkpoints
+# ============================================
+# Uncomment and customize as needed:
+
+#  - id: pre_integration
+#    description: "Review before third-party integrations"
+#    trigger: before_task_group_6
+#    required: false
+#    manual_setup:
+#      - "Verify Slack workspace permissions"
+#      - "Confirm GitHub OAuth app settings"
+
+#  - id: pre_database_migration
+#    description: "Review before database schema changes"
+#    trigger: before_task_5.1
+#    required: true
+
+#  - id: midpoint_review
+#    description: "Halfway checkpoint for large projects"
+#    trigger: after_task_group_5
+#    required: false

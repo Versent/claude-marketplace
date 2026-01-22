@@ -1,0 +1,9 @@
+{
+  "hooks": [
+    {
+      "event": "stop",
+      "command": "./hooks/session-complete-hook.sh",
+      "description": "Handles session completion for Professor Frink task loop"
+    }
+  ]
+}

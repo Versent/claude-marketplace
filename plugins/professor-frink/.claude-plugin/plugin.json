@@ -1,0 +1,9 @@
+{
+  "name": "professor-frink",
+  "version": "0.1.0",
+  "description": "Autonomous multi-session Claude Code plugin with HITL checkpoints, fresh context windows per task, and self-healing validation",
+  "author": {
+    "name": "Versent"
+  },
+  "hooks": "./hooks/hooks.json"
+}

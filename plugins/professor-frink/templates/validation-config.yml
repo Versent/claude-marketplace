@@ -1,0 +1,136 @@
+# Professor Frink Validation Configuration Template
+#
+# Copy this to .frink/validation.yml and customize for your project.
+
+validation:
+  # Enable/disable the validation system
+  enabled: true
+
+  # Self-healing mode: validator fixes issues itself
+  # When true, validation failures are fixed automatically
+  # When false, failures pause execution for human review
+  self_healing: true
+
+  # ============================================
+  # Validation Checks
+  # ============================================
+  checks:
+    # Verify all acceptance criteria from tasks.md are met
+    acceptance_criteria: true
+
+    # Verify implementation matches spec.md requirements
+    spec_alignment: true
+
+    # Run the project's test suite
+    run_tests: true
+
+    # Run linting checks
+    lint: true
+
+    # Run TypeScript type checking
+    type_check: true
+
+  # ============================================
+  # Commands
+  # ============================================
+  # Auto-detected if not specified, but can be customized
+  commands:
+    # Lint command
+    lint: "npm run lint"
+
+    # Lint auto-fix command (used by self-healing)
+    lint_fix: "npm run lint -- --fix"
+
+    # Test command
+    test: "npm test"
+
+    # Type check command
+    typecheck: "npm run typecheck"
+
+    # Build command (optional, for build verification)
+    # build: "npm run build"
+
+  # ============================================
+  # Timeouts
+  # ============================================
+  timeouts:
+    # Maximum time for lint check (seconds)
+    lint: 60
+
+    # Maximum time for test suite (seconds)
+    test: 300
+
+    # Maximum time for type check (seconds)
+    typecheck: 120
+
+  # ============================================
+  # Custom Rules
+  # ============================================
+  # Project-specific validation rules
+  custom_rules:
+    # Prevent debug code in production
+    - name: "No console.log in production code"
+      pattern: "console\\.log"
+      exclude:
+        - "*.test.ts"
+        - "*.spec.ts"
+        - "scripts/*"
+      severity: error
+      auto_fix: true
+      fix_action: "remove_line"
+
+    # Ensure API endpoints have tests
+    - name: "API endpoints must have tests"
+      check: "each_api_endpoint_has_test"
+      severity: warning
+      auto_fix: true
+      fix_action: "generate_test_stub"
+
+    # Prevent hardcoded secrets
+    - name: "No hardcoded secrets"
+      pattern: "(password|secret|api_key|token)\\s*=\\s*['\"][^'\"]{8,}['\"]"
+      exclude:
+        - "*.test.ts"
+        - "*.example"
+        - "*.template"
+      severity: error
+      auto_fix: false  # Requires human review
+
+    # Ensure error handling
+    - name: "Async functions should have error handling"
+      pattern: "async\\s+\\w+.*\\{[^}]*await[^}]*\\}"
+      check: "has_try_catch_or_catch"
+      severity: warning
+      auto_fix: true
+
+  # ============================================
+  # Acceptance Criteria Parsing
+  # ============================================
+  acceptance_criteria:
+    # Patterns to identify AC in tasks.md
+    patterns:
+      - "^- \\[ \\]"  # Unchecked checkbox
+      - "^- \\[x\\]"  # Checked checkbox
+      - "^\\* "       # Bullet point
+
+    # Keywords that indicate AC
+    keywords:
+      - "must"
+      - "should"
+      - "shall"
+      - "verify"
+      - "ensure"
+
+  # ============================================
+  # Reporting
+  # ============================================
+  reporting:
+    # Save validation results to file
+    save_results: true
+    results_file: ".frink/validation-history.json"
+
+    # Verbosity: minimal, normal, verbose
+    verbosity: normal
+
+    # Include timing information
+    include_timing: true
