@@ -17,11 +17,6 @@
       "source": "./plugins/example-versent-toolkit"
     },
     {
-      "name": "agent-os",
-      "source": "https://github.com/buildermethods/agent-os.git",
-      "description": "Spec-driven development with structured task workflows"
-    },
-    {
       "name": "professor-frink",
       "source": "./plugins/professor-frink",
       "description": "Autonomous multi-session task execution with HITL checkpoints"
