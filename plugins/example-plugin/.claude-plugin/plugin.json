@@ -1,0 +1,31 @@
+{
+  "name": "example-plugin",
+  "description": "Minimal example demonstrating Claude Code plugin structure",
+  "version": "1.0.0",
+  "author": {
+    "name": "Versent",
+    "email": "support@versent.com.au"
+  },
+  "keywords": ["example", "template", "starter"],
+  "commands": [
+    {
+      "name": "greet",
+      "description": "A friendly greeting command",
+      "file": "./commands/greet.md"
+    }
+  ],
+  "agents": [
+    {
+      "name": "reviewer",
+      "description": "Code review assistant agent",
+      "file": "./agents/reviewer.md"
+    }
+  ],
+  "skills": [
+    {
+      "name": "summarize",
+      "description": "Summarize code or documentation",
+      "file": "./skills/summarize.md"
+    }
+  ]
+}

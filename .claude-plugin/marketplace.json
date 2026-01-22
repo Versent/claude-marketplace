@@ -1,0 +1,20 @@
+{
+  "name": "versent-marketplace",
+  "owner": {
+    "name": "Versent",
+    "email": "support@versent.com.au"
+  },
+  "metadata": {
+    "description": "Versent's curated Claude Code plugins for engineering teams",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "example-plugin",
+      "description": "Minimal example demonstrating Claude Code plugin structure",
+      "version": "1.0.0",
+      "path": "./plugins/example-plugin"
+    }
+  ]
+}
