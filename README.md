@@ -28,7 +28,7 @@ export GITHUB_TOKEN=ghp_your_token_here
 /plugin discover
 
 # Install a specific plugin
-/plugin install example-plugin@versent-marketplace
+/plugin install example-versent-toolkit@versent-marketplace
 
 # List installed plugins
 /plugin list
@@ -38,7 +38,7 @@ export GITHUB_TOKEN=ghp_your_token_here
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| `example-plugin` | 1.0.0 | Minimal example demonstrating Claude Code plugin structure |
+| `example-versent-toolkit` | 1.0.0 | EXAMPLE: Template toolkit plugin - copy this to create your own |
 
 ## Plugin Development Guide
 
@@ -183,16 +183,6 @@ When adding a plugin, add an entry to `.claude-plugin/marketplace.json`:
 /plugin marketplace add /path/to/claude-marketplace
 /plugin install your-plugin@versent-marketplace
 ```
-
-## Plugin Ideas
-
-Looking for inspiration? Here are some plugins we'd love to see:
-
-- **aws-helper** - AWS CLI shortcuts and CDK helpers
-- **code-standards** - Versent coding standards enforcement
-- **internal-docs** - Quick access to internal documentation
-- **pr-helper** - PR description generation and review assistance
-- **terraform-assistant** - Terraform best practices and troubleshooting
 
 ## Resources
 
