@@ -5,8 +5,10 @@
 Professor Frink is a Claude Code plugin that enables autonomous multi-session task execution with:
 
 - **Fresh Context Windows**: Each task runs in a new Claude session, preventing context rot
+- **Principal Skinner Supervisor**: Safety controls with cost, duration, and iteration limits
 - **Self-Healing Validation**: The validator agent fixes issues autonomously
 - **HITL Checkpoints**: Planned stage gates for human review at critical points
+- **Rolling Window Progress**: Context-aware handoff documents that prevent unbounded growth
 - **Agent-OS Integration**: Works seamlessly with spec-driven development workflows
 
 ## Architecture
@@ -15,6 +17,11 @@ Professor Frink is a Claude Code plugin that enables autonomous multi-session ta
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Professor Frink Orchestrator                  │
 │                    (Parent Process / Shell Script)               │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Principal Skinner Supervisor                │   │
+│  │  - Cost limits     - Duration limits    - Iteration caps │   │
+│  └─────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                                 │
         ┌───────────────────────┼───────────────────────┐
@@ -28,10 +35,54 @@ Professor Frink is a Claude Code plugin that enables autonomous multi-session ta
         └─────────┬───────────┘
                   ▼
          ┌───────────────┐
+         │  Progress     │
+         │  Handoff      │
+         │  (Rolling     │
+         │   Window)     │
+         └───────────────┘
+                  │
+                  ▼
+         ┌───────────────┐
          │  NEXT TASK    │
          │  (Loop)       │
          └───────────────┘
 ```
+
+## Execution Modes
+
+Professor Frink supports two execution modes:
+
+### CLI Mode (Recommended for Autonomous Execution)
+
+Run the orchestrator **outside** of Claude Code for true session isolation:
+
+```bash
+# Initialize
+./bin/frink-orchestrator.sh init agent-os/specs/phase-1/tasks.md
+
+# Run autonomous execution
+./bin/frink-orchestrator.sh run
+
+# Resume from specific task
+./bin/frink-orchestrator.sh run --from 2.1
+```
+
+**Benefits:**
+- Each task gets a completely fresh Claude session
+- No context accumulation between tasks
+- Full 100K+ token context for each task
+- Parallel execution possible
+
+### Skill Mode (Interactive Use)
+
+Run from within Claude Code for guided execution:
+
+```bash
+/professor-frink:init
+/professor-frink:run
+```
+
+**Note:** Skill mode uses subagents which share some context. Recommended for shorter task groups or when you want interactive oversight.
 
 ## Installation
 
@@ -51,11 +102,10 @@ Professor Frink is a Claude Code plugin that enables autonomous multi-session ta
 | Dependency | Required? | Purpose |
 |------------|-----------|---------|
 | `jq` | Yes | JSON processing in shell scripts |
-| `git` | Yes | Version control, commits |
+| `git` | Yes | Version control, atomic commits |
 | `claude` CLI | Yes | Spawning fresh sessions |
+| `bc` | Optional | Floating point math for cost tracking |
 | **agent-os** | Recommended | Spec-driven development with tasks.md |
-
-Without Agent-OS, Professor Frink runs in **standalone mode** - you provide a simple task list instead of using spec-driven tasks.md files.
 
 ## Quick Start
 
@@ -64,17 +114,32 @@ Without Agent-OS, Professor Frink runs in **standalone mode** - you provide a si
 ```bash
 # In your project directory
 /professor-frink:init
+
+# Or with CLI
+./bin/frink-orchestrator.sh init agent-os/specs/phase-1/tasks.md
 ```
 
-Or with the CLI:
+### 2. Configure Safety Limits
+
+Copy and customize the config template:
 
 ```bash
-frink init agent-os/specs/phase-1/tasks.md
+cp templates/config.yml .frink/config.yml
 ```
 
-### 2. Configure Checkpoints (Optional)
+Edit `.frink/config.yml`:
 
-Edit `.frink/checkpoints.yml` to define when human review is required:
+```yaml
+execution:
+  max_cost_per_task: 10.00      # USD limit
+  max_duration_per_task: 600     # 10 minutes
+  max_iterations_per_task: 3     # Retry limit
+  cost_per_1k_tokens: 0.015      # Adjust for model
+```
+
+### 3. Configure Checkpoints (Optional)
+
+Edit `.frink/checkpoints.yml`:
 
 ```yaml
 checkpoints:
@@ -84,22 +149,23 @@ checkpoints:
     required: true
 ```
 
-### 3. Run Execution
+### 4. Run Execution
 
 ```bash
+# CLI mode (recommended)
+./bin/frink-orchestrator.sh run
+
+# Or skill mode
 /professor-frink:run
 ```
 
-Or with the CLI:
-
-```bash
-frink run
-```
-
-### 4. Monitor Progress
+### 5. Monitor Progress
 
 ```bash
 /professor-frink:status
+
+# Or check supervisor stats
+./lib/principal-skinner.sh status
 ```
 
 ## Commands
@@ -113,73 +179,119 @@ frink run
 | `/professor-frink:amend` | Add feedback to a checkpoint |
 | `/professor-frink:cancel` | Cancel execution |
 
-## Directory Structure
+## Safety Controls (Principal Skinner)
 
-When initialized, Professor Frink creates:
+Professor Frink includes the **Principal Skinner** supervisor to prevent runaway behavior:
+
+### Cost Limits
+
+```yaml
+execution:
+  max_cost_per_task: 10.00  # Stop if total cost exceeds this
+```
+
+### Duration Limits
+
+```yaml
+execution:
+  max_duration_per_task: 600  # Kill session after 10 minutes
+```
+
+### Iteration Limits
+
+```yaml
+execution:
+  max_iterations_per_task: 3  # Max retries per task
+```
+
+### Supervisor Commands
+
+```bash
+# Check current limits and usage
+./lib/principal-skinner.sh status
+
+# Check if a task can proceed
+./lib/principal-skinner.sh check-limits 1.1
+
+# Reset stats for new run
+./lib/principal-skinner.sh reset
+```
+
+## Structured Task List (Anthropic Best Practice)
+
+Professor Frink uses Anthropic's recommended `passes` boolean pattern:
+
+```json
+{
+  "task_queue": [
+    {"id": "1.1", "description": "Create structure", "passes": false},
+    {"id": "1.2", "description": "Add TypeScript", "passes": false}
+  ]
+}
+```
+
+**Key principle:** Agents can only set `passes: true`, never remove tasks or set false. This prevents agents from "completing" tasks prematurely or modifying the task list.
+
+## Rolling Window Progress
+
+To prevent context rot in handoff documents, Professor Frink uses a rolling window:
+
+```yaml
+progress:
+  rolling_window_size: 5      # Only keep last 5 task summaries
+  max_summary_lines: 20       # Limit summary length
+```
+
+The progress file (`progress.txt`) contains:
+- Quick status (total completed, last task)
+- Key decisions (always preserved)
+- Open blockers
+- Recent task summaries (rolling window)
+
+Full history is preserved in `progress-history.json` for audit.
+
+## Directory Structure
 
 ```
 .frink/
-├── state.json           # Task queue and execution state
-├── checkpoints.yml      # HITL checkpoint configuration
-├── credentials.yml      # Required credentials
-├── validation.yml       # Validation rules
-├── context/             # Per-task context files
+├── state.json              # Task queue and execution state
+├── config.yml              # Configuration (copy from templates/)
+├── checkpoints.yml         # HITL checkpoint definitions
+├── credentials.yml         # Required credentials
+├── validation.yml          # Validation rules
+├── supervisor-stats.json   # Principal Skinner stats
+├── progress.txt            # Rolling window progress notes
+├── progress-history.json   # Full progress history
+├── context/                # Per-task context files
 │   ├── task-1.1-context.md
-│   ├── task-1.2-context.md
 │   └── ...
-├── logs/                # Session logs
-├── progress.txt         # Session handoff notes
-└── HITL_FEEDBACK.md     # Human feedback (when amended)
+├── logs/                   # Session logs
+│   ├── session-1.1-executor-*.log
+│   └── ...
+└── prompts/                # Generated session prompts
 ```
-
-## Agent Registration
-
-Professor Frink uses three specialized subagents: `frink-executor`, `frink-validator`, and `frink-fixer`.
-
-### Plugin Mode (Installed via Marketplace)
-
-When Professor Frink is installed as a plugin:
-```bash
-/plugin install professor-frink@versent-plugins
-```
-
-The agents in `agents/` are **automatically registered** by Claude Code's plugin system. No additional setup required.
-
-### Development Mode (Embedded in Project)
-
-When Professor Frink lives in a project repo (e.g., during development):
-
-1. The `/professor-frink:init` command creates symlinks in `.claude/agents/professor-frink/`
-2. These symlinks point to `professor-frink/agents/*.md`
-3. This makes agents discoverable by Claude Code's agent system
-
-```
-.claude/agents/professor-frink/
-├── frink-executor.md → ../../../professor-frink/agents/task-executor.md
-├── frink-validator.md → ../../../professor-frink/agents/task-validator.md
-└── frink-fixer.md → ../../../professor-frink/agents/task-fixer.md
-```
-
-The symlinks are only needed in development mode and are not part of the plugin distribution.
 
 ## Agent Types
 
-### Executor Agent
+### Executor Agent (`frink-executor`)
+
 Implements a single task:
 1. Runs environment health check (lint, tests, types)
 2. Implements the task per acceptance criteria
-3. Commits changes
-4. Reports completion
+3. Commits changes atomically
+4. Reports completion with promise string
 
-### Validator Agent (Self-Healing)
-Validates task implementation:
+### Validator Agent (`frink-validator`)
+
+Validates and self-heals:
 1. Checks acceptance criteria
 2. Verifies spec alignment
 3. Runs tests, lint, type check
 4. **Fixes any failures autonomously**
 5. Re-validates until all pass
 
-### Fixer Agent
+### Fixer Agent (`frink-fixer`)
+
 Repairs pre-existing issues:
 1. Analyzes lint/test/type errors
 2. Applies fixes aligned with spec
@@ -199,12 +311,44 @@ checkpoints:
       - "Add AWS credentials to environment"
 ```
 
-When a checkpoint triggers:
-1. Execution pauses
-2. Clear notification displayed
-3. Use `/professor-frink:approve` or `/professor-frink:amend` to continue
-
 **Important**: HITL checkpoints are ONLY for planned stage gates, not for code validation failures. The validator agent handles code issues autonomously.
+
+## Testing
+
+Professor Frink includes a test suite:
+
+```bash
+cd plugins/professor-frink/test
+
+# Run all tests
+./run-test.sh
+
+# Run specific tests
+./run-test.sh init
+./run-test.sh supervisor
+./run-test.sh progress
+
+# Clean test artifacts
+./run-test.sh clean
+```
+
+The test suite verifies:
+- Script executability
+- Dependency availability
+- State initialization with `passes` field
+- Principal Skinner supervisor
+- Progress handoff rolling window
+
+## Best Practices
+
+Based on [Anthropic's guidance for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents):
+
+1. **Use CLI mode for production** - True session isolation prevents context rot
+2. **Set conservative limits** - Start with low cost/duration limits and increase as needed
+3. **Use atomic commits** - Each task gets its own commit for easy rollback
+4. **Keep context focused** - Rolling window prevents unbounded growth
+5. **Trust the validator** - Let it self-heal rather than stopping for every error
+6. **Plan checkpoints carefully** - Use for strategic review points, not error handling
 
 ## Agent-OS Integration
 
@@ -217,82 +361,37 @@ Professor Frink integrates with Agent-OS:
 | `requirements.md` | Available for context |
 | `standards/*` | Loaded per task domain |
 
-## Configuration
+## Configuration Reference
 
-### Credentials (`.frink/credentials.yml`)
+See `templates/config.yml` for the full configuration reference with all options documented.
 
-```yaml
-credentials:
-  required_env_vars:
-    - AWS_ACCESS_KEY_ID
-    - AWS_SECRET_ACCESS_KEY
-  optional_env_vars:
-    - SLACK_WEBHOOK_URL
-```
+## Troubleshooting
 
-### Validation (`.frink/validation.yml`)
+### Session not spawning
 
-```yaml
-validation:
-  enabled: true
-  self_healing: true
-  checks:
-    acceptance_criteria: true
-    spec_alignment: true
-    run_tests: true
-    lint: true
-    type_check: true
-```
+Ensure you're running via CLI mode (`./bin/frink-orchestrator.sh run`) not skill mode for true isolation.
 
-## CLI Usage
-
-The orchestrator can run outside of Claude Code:
+### Cost limit exceeded
 
 ```bash
-# Initialize
-frink init tasks.md
-
-# Run execution
-frink run
-
-# Start from specific task
-frink run --from 2.1
-
-# Show status
-frink status
+./lib/principal-skinner.sh reset  # Reset stats
+./lib/principal-skinner.sh status # Check current usage
 ```
 
-## How It Works
+### Task stuck in loop
 
-### Fresh Context Windows
+Check iteration count:
+```bash
+./lib/principal-skinner.sh check-iterations 1.1
+```
 
-Unlike traditional approaches that keep a single session alive, Professor Frink:
+### Context too large
 
-1. Spawns a **new Claude session** for each task
-2. Loads only **task-specific context** (not the entire codebase)
-3. Preserves progress in **artifact files** for session handoff
-
-This prevents context rot and ensures each task gets maximum context window efficiency.
-
-### Self-Healing Validation
-
-The validator agent is designed to be autonomous:
-
-1. When a check fails, it **analyzes the failure**
-2. It **makes targeted fixes** based on spec and standards
-3. It **re-validates** until all checks pass
-4. It **never returns to human** for code issues
-
-This means execution can proceed through the entire task list with minimal human intervention.
-
-### Task Context Generation
-
-During initialization, Professor Frink:
-
-1. Parses `tasks.md` for all tasks
-2. Extracts relevant sections from spec, standards, tech-stack
-3. Generates focused context files for each task
-4. Each file is ~500 lines of highly relevant information
+Reduce rolling window size in config:
+```yaml
+progress:
+  rolling_window_size: 3
+```
 
 ## Contributing
 
@@ -301,3 +400,9 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## License
 
 MIT
+
+## References
+
+- [Anthropic: Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+- [Ralph Wiggum Technique](https://securetrajectories.substack.com/p/ralph-wiggum-principal-skinner-agent-reliability)
+- [Agent-OS Documentation](https://github.com/buildermethods/agent-os)

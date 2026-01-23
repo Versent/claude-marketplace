@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "schema_notes": {
+    "passes_field": "Agents can only set passes: true, never remove tasks or set false",
+    "immutable_tasks": "Task list is immutable - agents cannot add or remove tasks"
+  },
+  "created_at": "2026-01-23T01:39:53Z",
+  "updated_at": "2026-01-23T01:39:53Z",
+  "execution_state": "idle",
+  "current_task": null,
+  "current_task_group": null,
+  "current_session_type": null,
+  "tasks_completed": [],
+  "tasks_failed": [],
+  "total_tasks": 0,
+  "total_sessions": 0,
+  "executor_sessions": 0,
+  "validator_sessions": 0,
+  "fixer_sessions": 0,
+  "self_healing_fixes": 0,
+  "pending_checkpoint": null,
+  "last_session_at": null,
+  "task_queue": []
+}

@@ -34,15 +34,22 @@ init_state() {
         # Use task-parser to get tasks
         local parser_dir="$(dirname "$0")"
         if [[ -f "$parser_dir/task-parser.sh" ]]; then
-            tasks=$("$parser_dir/task-parser.sh" "$tasks_file" --output json | jq '.tasks')
+            # Parse tasks and add 'passes' field (Anthropic best practice)
+            # Agents can only set passes: true, never remove tasks or set false
+            tasks=$("$parser_dir/task-parser.sh" "$tasks_file" --output json | jq '.tasks | map(. + {passes: false})')
             total_tasks=$(echo "$tasks" | jq 'length')
         fi
     fi
 
-    # Create initial state
+    # Create initial state with structured task list
+    # Uses Anthropic's recommended 'passes' boolean pattern
     cat > "$STATE_FILE" << EOF
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "schema_notes": {
+    "passes_field": "Agents can only set passes: true, never remove tasks or set false",
+    "immutable_tasks": "Task list is immutable - agents cannot add or remove tasks"
+  },
   "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "execution_state": "idle",
@@ -65,6 +72,7 @@ EOF
 
     echo "State initialized: $STATE_FILE"
     echo "Total tasks queued: $total_tasks"
+    echo "Note: Tasks use 'passes' boolean (Anthropic best practice)"
 }
 
 # Get current task
@@ -77,26 +85,24 @@ get_current() {
     jq -r '.current_task // "null"' "$STATE_FILE"
 }
 
-# Get next incomplete task
+# Get next incomplete task (where passes: false)
 get_next() {
     if [[ ! -f "$STATE_FILE" ]]; then
         echo "null"
         return
     fi
 
-    # Get completed tasks
-    local completed=$(jq -r '.tasks_completed | @json' "$STATE_FILE")
-
-    # Find first incomplete task
-    jq -r --argjson completed "$completed" '
+    # Find first task where passes is false (not yet completed)
+    # Uses Anthropic's recommended pattern
+    jq -r '
         .task_queue[] |
-        select(.completed == false) |
-        select(.id as $id | ($completed | index($id)) == null) |
+        select(.passes == false) |
         .id
     ' "$STATE_FILE" | head -1
 }
 
-# Mark task as complete
+# Mark task as complete (sets passes: true)
+# Following Anthropic's pattern: agents can only set passes to true, never false
 complete_task() {
     local task_id="$1"
 
@@ -105,15 +111,15 @@ complete_task() {
         exit 1
     fi
 
-    # Update state
+    # Update state - set passes: true (immutable once set)
     local tmp_file=$(mktemp)
     jq --arg task_id "$task_id" '
         .tasks_completed += [$task_id] |
-        .task_queue = [.task_queue[] | if .id == $task_id then .completed = true else . end] |
+        .task_queue = [.task_queue[] | if .id == $task_id then .passes = true | .completed = true else . end] |
         .updated_at = (now | todate)
     ' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
 
-    echo "Task $task_id marked complete"
+    echo "Task $task_id marked complete (passes: true)"
 }
 
 # Mark task as failed

@@ -1,0 +1,114 @@
+# Professor Frink Configuration
+#
+# This file controls execution behavior and safety limits.
+# Copy to .frink/config.yml and customize for your project.
+
+# Execution safety limits (Principal Skinner supervisor)
+execution:
+  # Maximum cost in USD before stopping execution
+  # Prevents runaway spending on long-running tasks
+  max_cost_per_task: 10.00
+
+  # Maximum duration per task in seconds (10 minutes default)
+  # Tasks exceeding this will be terminated
+  max_duration_per_task: 600
+
+  # Maximum iterations per task before giving up
+  # Prevents infinite loops on problematic tasks
+  max_iterations_per_task: 3
+
+  # Cost per 1K tokens (adjust based on model)
+  # Claude Sonnet: ~$0.015, Claude Opus: ~$0.075
+  cost_per_1k_tokens: 0.015
+
+  # Completion promise string that signals task completion
+  # The executor must output this to indicate success
+  completion_promise: "TASK_COMPLETE"
+
+  # Maximum turns per Claude session
+  max_turns_executor: 50
+  max_turns_validator: 30
+  max_turns_fixer: 20
+
+# Session spawning configuration
+sessions:
+  # Mode: "subprocess" for true isolation, "subagent" for faster but shared context
+  # subprocess: Spawns fresh `claude --print` processes (recommended for long runs)
+  # subagent: Uses Task tool subagents (faster, but context accumulates)
+  mode: subprocess
+
+  # Allowed tools for spawned sessions
+  allowed_tools:
+    - Bash
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+    - TodoWrite
+
+  # Log retention (days)
+  log_retention_days: 7
+
+# Progress handoff configuration
+progress:
+  # Rolling window: only keep last N task summaries in progress.txt
+  # Prevents unbounded context growth
+  rolling_window_size: 5
+
+  # Maximum lines per task summary
+  max_summary_lines: 20
+
+  # Include git commit hashes in progress notes
+  include_commit_hashes: true
+
+# Validation configuration
+validation:
+  enabled: true
+  self_healing: true
+
+  checks:
+    acceptance_criteria: true
+    spec_alignment: true
+    run_tests: true
+    lint: true
+    type_check: true
+
+  # Commands to run for each check (customize per project)
+  commands:
+    lint: "npm run lint"
+    test: "npm test"
+    typecheck: "npm run typecheck"
+
+# Health check configuration
+health_check:
+  # Run health checks before each task
+  enabled: true
+
+  # Skip health checks for certain task groups (by ID)
+  skip_for_groups: []
+
+  # Commands that must pass before task execution
+  commands:
+    - "npm run lint"
+    - "npm test"
+    - "npm run typecheck"
+
+# Git configuration
+git:
+  # Require atomic commits for each task
+  atomic_commits: true
+
+  # Commit message format
+  message_format: |
+    {type}({scope}): {description}
+
+    {body}
+
+    Task: {task_id}
+    Refs: tasks.md
+
+    Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+
+  # Auto-push after each task (not recommended for review workflows)
+  auto_push: false
