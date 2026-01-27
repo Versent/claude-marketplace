@@ -1,6 +1,6 @@
 ---
-description: Initialize Professor Frink in a project - detects Agent-OS, parses tasks, sets up .frink/ state with comprehensive credential documentation. Use when starting a new autonomous execution session.
-argument-hint: [spec-name]
+description: Initialize Professor Frink in a project - detects Agent-OS, parses tasks, sets up .frink/ state. Includes tiered discovery modes (Quick/Standard/Comprehensive), task quality assessment, and Claude folder generation.
+argument-hint: [spec-name] [--quick|--standard|--comprehensive]
 ---
 
 # /professor-frink:init - Initialize Professor Frink
@@ -12,21 +12,25 @@ You are initializing Professor Frink for autonomous multi-session task execution
 **Required:**
 - Git repository initialized
 - `jq` installed (for JSON processing)
-
-**Optional but Recommended:**
 - Agent-OS installed (`agent-os/` directory with specs and standards)
-- Without Agent-OS, you'll need to provide a simple task list
 
-Check for Agent-OS:
+Check for Agent-OS (REQUIRED):
 ```bash
 if [[ ! -d "agent-os" ]]; then
-    echo "Warning: Agent-OS not detected."
-    echo "Professor Frink works best with Agent-OS for spec-driven development."
-    echo ""
-    echo "To install Agent-OS, add the plugin:"
-    echo "  /plugin install agent-os@versent-plugins"
-    echo ""
-    echo "Or continue without it for standalone task execution."
+    echo "================================================================================
+ERROR: Agent-OS not detected.
+================================================================================
+
+Professor Frink requires Agent-OS for spec-driven development.
+
+To install Agent-OS:
+  1. Add the marketplace: /plugin marketplace add Versent/claude-marketplace
+  2. Install: /plugin install agent-os@versent-plugins
+  3. Initialize: /agent-os:init
+
+Then run /professor-frink:init again.
+================================================================================"
+    exit 1
 fi
 ```
 
@@ -40,69 +44,134 @@ Read the project state first, then present:
 
 ```markdown
 ================================================================================
-PROFESSOR FRINK - INITIALIZATION PLAN
+PROFESSOR FRINK - INITIALIZATION ROADMAP
 ================================================================================
 
 I've detected the following project state:
 
 **Project:** [detected project name from package.json or directory]
-**Agent-OS:** [Detected / Not Detected]
+**Agent-OS:** Detected ✓
 **Existing Code:** [Yes/No - based on src/, apps/, etc.]
 **Git Repository:** [Initialized / Not Initialized]
 
-## What I Plan To Do
+## What I Will Do
 
-### Phase 1: Project Detection & Tool Verification
+### Phase 1: Project Detection & Tool Verification (~1 min)
 - Verify required tools (node, npm, docker, terraform, etc.)
 - Parse existing Agent-OS specifications
 - Identify credential requirements per task group
 
-### Phase 2: Spec Refinement (if Agent-OS detected)
-I'll ask you ~45 questions in a "20 questions" style game to refine the specifications.
-This ensures the autonomous agent has comprehensive, detailed specifications.
+### Phase 2: Task Quality Assessment (~2 min)
+- Score each task on completeness (0-100)
+- Identify gaps in acceptance criteria, tech details, tests
+- Focus discovery questions on low-scoring areas
 
-**Question Rounds:**
-1. **Product Vision** (10 questions) - Mission, roadmap, tech stack
-2. **Standards** (10 questions) - Frontend, backend, global conventions
-3. **Specifications** (10 questions) - Planning docs and spec.md
-4. **Tasks** (10 questions) - Task details, acceptance criteria, verification
-5. **Deep Dive** (5 questions) - Cross-cutting concerns across all docs
+### Phase 3: Discovery Questions (5-20 min based on mode)
+Choose your mode:
+- **Quick Mode**: 10 essential questions (~5 min)
+- **Standard Mode**: 25 questions (recommended, ~10 min)
+- **Comprehensive Mode**: 45 questions (~20 min)
 
-After each round, I'll update the relevant files.
+Question categories:
+- Tech Stack (batches 1-2)
+- Standards (batches 3-4)
+- Specifications (batches 5-6)
+- Tasks (batches 7-8)
+- Deep Dive (batch 9) - paragraph responses
 
-### Phase 3: State Generation
+### Phase 4: Update Agent-OS Documentation (~2 min)
+- Update specs based on your answers
+- Enrich tasks with tech details and test approaches
+- Document key decisions
+
+### Phase 5: Generate Claude Folder (~1 min)
+- Generate `claude.md` (project overview, 60-75 lines)
+- Create `.claude/rules/` (domain-based rule files)
+- Suggest relevant MCP servers and generate skill files
+
+### Phase 6: State Generation & Summary
 - Create `.frink/` directory structure
 - Generate credentials.yml with setup instructions
 - Build task context files
-- Configure HITL checkpoints
-
-### Phase 4: Final Summary
-- Display what was created
-- Show credential requirements
-- Explain next steps
-
-## Time Estimate
-- Phase 1: ~1 minute
-- Phase 2: ~15-20 minutes (interactive)
-- Phase 3: ~2 minutes
-- Phase 4: Summary display
+- Display summary and next steps
 
 ================================================================================
 ```
 
-**Use AskUserQuestion to get approval:**
+**Use AskUserQuestion to get mode selection:**
 
 ```
-Question: "Ready to proceed with initialization?"
+Question: "Which initialization mode would you like?"
 Options:
-- "Yes, start initialization" (proceed with all phases)
-- "Skip spec refinement" (skip Phase 2, proceed with existing specs)
-- "Cancel" (abort initialization)
+- "Standard Mode (25 questions) - Recommended"
+- "Quick Mode (10 questions) - For simple projects"
+- "Comprehensive Mode (45 questions) - For complex projects"
+- "Skip discovery - Use existing specs as-is"
 ```
 
-**If user selects "Skip spec refinement":** Proceed directly to Step 1 and skip the Spec Refinement Phase entirely.
+Record the mode selection for use in Phase 3.
 
-**If user selects "Cancel":** Output "Initialization cancelled." and stop.
+**If user selects "Skip discovery":** Proceed directly to Phase 4 (Update) and Phase 5 (Claude Folder) with existing specs.
+
+---
+
+### Phase 2: Task Quality Assessment (NEW)
+
+**Before asking discovery questions, assess task quality to focus the questions.**
+
+Use the task assessor helper:
+```bash
+source lib/task-assessor.sh
+task_assessor_init ".frink/task-assessment.json"
+```
+
+For each task in `agent-os/specs/*/tasks.md`:
+
+1. **Parse the task** - Extract ID, description, and any existing details
+2. **Detect criteria presence**:
+   - Acceptance criteria (AC:, Expected:, Should:, Given/When/Then)
+   - Tech details (Implement using, Create, Configure)
+   - Test approach (Test:, Verify by:, Coverage)
+   - Dependencies (After task, Depends on, Requires)
+   - Effort indicators (Small/Medium/Large, hours, points)
+
+3. **Calculate score** (out of 100):
+   - Acceptance Criteria: 25%
+   - Tech Details: 25%
+   - Test Approach: 20%
+   - Dependencies: 15%
+   - Effort Estimate: 15%
+
+4. **Generate report**:
+
+```
+================================================================================
+TASK QUALITY ASSESSMENT
+================================================================================
+
+Summary
+-------
+Total Tasks Assessed: 25
+Average Score: 72/100
+
+Distribution:
+  Excellent (90-100): 5 tasks
+  Good (70-89):       12 tasks
+  Fair (50-69):       6 tasks
+  Poor (<50):         2 tasks
+
+Tasks Needing Improvement
+-------------------------
+  Task 1.4: 45/100 - Missing: acceptance_criteria, test_approach
+  Task 2.1: 55/100 - Missing: tech_details, effort_estimate
+
+================================================================================
+```
+
+**Use assessment to focus discovery questions:**
+- Low-scoring tasks become priority topics
+- Skip questions about well-documented areas
+- Generate task-specific refinement questions
 
 ---
 
@@ -600,6 +669,179 @@ SPEC REFINEMENT COMPLETE
 1. [Summary of important decisions from questions]
 2. [...]
 3. [...]
+
+## Proceeding to Claude Folder Generation...
+================================================================================
+```
+
+---
+
+## Phase 5: Generate Claude Folder (NEW)
+
+**After spec refinement, generate the `.claude/` folder structure.**
+
+Use the Claude folder generator helper:
+```bash
+source lib/claude-folder-generator.sh
+generator_init "." ".frink/generator-config.json"
+```
+
+### Step 5.1: Gather Project Metadata
+
+Extract from agent-os and package.json:
+```bash
+# Get project name
+PROJECT_NAME=$(jq -r '.name' package.json 2>/dev/null || basename $(pwd))
+
+# Get mission summary
+MISSION=$(head -5 agent-os/product/mission.md | grep -v "^#" | head -1)
+
+# Detect commands
+BUILD_CMD=$(jq -r '.scripts.build // "npm run build"' package.json)
+TEST_CMD=$(jq -r '.scripts.test // "npm test"' package.json)
+LINT_CMD=$(jq -r '.scripts.lint // "npm run lint"' package.json)
+DEV_CMD=$(jq -r '.scripts.dev // "npm run dev"' package.json)
+```
+
+### Step 5.2: Create .claude Directory Structure
+
+```bash
+mkdir -p .claude/rules
+mkdir -p .claude/skills
+```
+
+### Step 5.3: Generate claude.md
+
+Create a balanced `claude.md` file (60-75 lines) with:
+- Project overview and mission
+- Quick reference (stack, commands)
+- Architecture summary with @-references
+- Code style summary with link to rules
+- Testing summary with link to rules
+- Common tasks table
+- Key decisions
+- Gotchas
+- Footer with links to detailed docs
+
+**Template structure:**
+```markdown
+# {PROJECT_NAME}
+
+> {MISSION_SUMMARY}
+
+## Quick Reference
+
+- **Stack:** {TECH_STACK_SUMMARY}
+- **Build:** `{BUILD_COMMAND}`
+- **Test:** `{TEST_COMMAND}`
+- **Lint:** `{LINT_COMMAND}`
+
+## Architecture
+
+{ARCHITECTURE_SUMMARY}
+
+See @agent-os/specs/{PHASE}/spec.md for detailed architecture.
+
+## Code Style
+
+{CODE_STYLE_SUMMARY}
+
+See @.claude/rules/code-style.md for complete guidelines.
+
+## Testing
+
+{TESTING_SUMMARY}
+
+See @.claude/rules/testing.md for test patterns.
+
+## Common Tasks
+
+| Task | Command |
+|------|---------|
+| Run dev server | `{DEV_COMMAND}` |
+| Run tests | `{TEST_COMMAND}` |
+| Build | `{BUILD_COMMAND}` |
+| Lint | `{LINT_COMMAND}` |
+
+## Key Decisions
+
+{KEY_DECISIONS from discovery answers}
+
+## Gotchas
+
+{GOTCHAS from discovery answers}
+
+---
+
+For detailed standards: @.claude/rules/
+For project tasks: @agent-os/specs/{PHASE}/tasks.md
+```
+
+### Step 5.4: Generate Domain-Based Rule Files
+
+Create rule files in `.claude/rules/`:
+
+| File | Paths Filter | Content Focus |
+|------|-------------|---------------|
+| `code-style.md` | (none - global) | Naming, formatting, patterns |
+| `testing.md` | `**/test/**,**/*.test.*` | Test approach, coverage |
+| `security.md` | (none - global) | Auth, validation, secrets |
+| `api.md` | `**/api/**,**/routes/**` | REST, responses, versioning |
+| `frontend.md` | `**/*.tsx,**/components/**` | Components, state, styling |
+| `infrastructure.md` | `**/terraform/**,**/deploy/**` | IaC, environments, deployment |
+
+Each rule file should:
+1. Include `paths:` frontmatter for conditional loading (where applicable)
+2. Contain 30-50 lines of focused guidelines
+3. Reference discovery question answers for project-specific rules
+4. Link to relevant standards in agent-os
+
+### Step 5.5: Detect and Suggest MCP Servers
+
+Auto-detect based on tech stack:
+
+| Tech Stack | Suggested MCP | Purpose |
+|------------|---------------|---------|
+| Any project | context7 | Documentation lookup |
+| React/Vue/Angular | playwright | Browser testing |
+| Terraform | terraform-registry | Provider docs |
+| AWS | aws-docs | Service documentation |
+| PostgreSQL | postgres | Database queries |
+| GitHub | github | PR/Issue management |
+
+For each suggested MCP:
+1. Check if already configured
+2. Display suggestion with install command
+3. Generate skill file in `.claude/skills/{mcp-name}/SKILL.md`
+
+### Step 5.6: Display Generation Summary
+
+```
+================================================================================
+CLAUDE FOLDER GENERATED
+================================================================================
+
+## Files Created
+
+| File | Purpose |
+|------|---------|
+| `claude.md` | Project overview (67 lines) |
+| `.claude/rules/code-style.md` | Code style guidelines |
+| `.claude/rules/testing.md` | Testing patterns |
+| `.claude/rules/security.md` | Security guidelines |
+| `.claude/rules/api.md` | API conventions |
+| `.claude/rules/frontend.md` | Frontend patterns |
+| `.claude/rules/infrastructure.md` | IaC guidelines |
+
+## Suggested MCP Servers
+
+| MCP | Purpose | Install |
+|-----|---------|---------|
+| context7 | Documentation lookup | Already configured |
+| playwright | Browser testing | /mcp add playwright |
+| aws-docs | AWS documentation | /mcp add aws-docs |
+
+Skill files generated in .claude/skills/
 
 ## Proceeding to State Generation...
 ================================================================================

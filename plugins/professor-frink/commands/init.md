@@ -1,36 +1,114 @@
 ---
-description: Initialize Professor Frink in a project - detects Agent-OS, parses tasks, sets up .frink/ state with comprehensive credential documentation. Use when starting a new autonomous execution session.
-argument-hint: [spec-name]
+description: Initialize Professor Frink in a project - detects Agent-OS, parses tasks, sets up .frink/ state with comprehensive credential documentation. Includes tiered discovery modes and Claude folder generation.
+argument-hint: [spec-name] [--quick|--standard|--comprehensive]
 ---
 
 # /professor-frink:init - Initialize Professor Frink
 
 You are initializing Professor Frink for autonomous multi-session task execution.
 
+## Enhanced Features
+
+This init command now includes:
+- **Tiered Discovery Modes**: Quick (10), Standard (25), or Comprehensive (45) questions
+- **Task Quality Assessment**: Score each task for completeness
+- **Claude Folder Generation**: Generate `.claude/` with rules and MCP skills
+- **Detailed Execution Roadmap**: See exactly what will happen before starting
+
 ## Prerequisites
 
 **Required:**
 - Git repository initialized
 - `jq` installed (for JSON processing)
-
-**Optional but Recommended:**
 - Agent-OS installed (`agent-os/` directory with specs and standards)
-- Without Agent-OS, you'll need to provide a simple task list
+
+**Note:** Agent-OS is now required. Without it, init will fail with guidance on installing Agent-OS.
 
 Check for Agent-OS:
 ```bash
 if [[ ! -d "agent-os" ]]; then
-    echo "Warning: Agent-OS not detected."
-    echo "Professor Frink works best with Agent-OS for spec-driven development."
+    echo "Error: Agent-OS not detected."
+    echo ""
+    echo "Professor Frink requires Agent-OS for spec-driven development."
     echo ""
     echo "To install Agent-OS, add the plugin:"
     echo "  /plugin install agent-os@versent-plugins"
     echo ""
-    echo "Or continue without it for standalone task execution."
+    echo "Then run /agent-os:init to set up your project specifications."
+    exit 1
 fi
 ```
 
-## Initialization Steps
+## Initialization Modes
+
+Select a discovery mode based on your project needs:
+
+| Mode | Questions | Best For |
+|------|-----------|----------|
+| **Quick** | 10 | Simple projects, detailed existing docs |
+| **Standard** | 25 | Most projects (recommended) |
+| **Comprehensive** | 45 | Complex projects, specs need refinement |
+
+## Initialization Phases
+
+### Phase 0: Present Execution Roadmap (HITL Required)
+
+Before any action, present what will happen and get approval.
+
+### Phase 1: Project Detection & Tool Verification
+
+Detect project state, verify tools, check Agent-OS presence.
+
+### Phase 2: Task Quality Assessment
+
+Score each task on completeness:
+- Acceptance criteria (25%)
+- Tech details (25%)
+- Test approach (20%)
+- Dependencies (15%)
+- Effort estimate (15%)
+
+Tasks below 70 become focus areas for discovery questions.
+
+### Phase 3: Discovery Questions (Tiered)
+
+Ask questions based on selected mode:
+- Tech Stack (batches 1-2)
+- Standards (batches 3-4)
+- Specifications (batches 5-6)
+- Tasks (batches 7-8)
+- Deep Dive (batch 9) - requires paragraph responses
+
+### Phase 4: Update Agent-OS Documentation
+
+Update specs based on answers:
+- Enrich tasks with tech details and test approaches
+- Add acceptance criteria where missing
+- Document decisions in planning files
+
+### Phase 5: Generate Claude Folder
+
+Create `.claude/` structure:
+```
+.claude/
+├── rules/
+│   ├── code-style.md
+│   ├── testing.md
+│   ├── security.md
+│   ├── api.md
+│   ├── frontend.md
+│   └── infrastructure.md
+└── skills/
+    └── [mcp-name]/SKILL.md
+```
+
+Generate `claude.md` (60-75 lines) with project overview.
+
+### Phase 6: State Generation & Summary
+
+Create `.frink/` directory structure and display summary.
+
+## Detailed Steps
 
 ### Step 1: Detect Project State
 
@@ -406,3 +484,20 @@ Run `/professor-frink:run` to start autonomous execution.
 4. **credentials.yml includes HOW TO OBTAIN** - step-by-step instructions, not just variable names.
 
 5. **state.json tracks credential requirements per task group** - enables run to fail-fast intelligently.
+
+6. **Agent-OS is required** - init fails with guidance if agent-os/ directory is missing.
+
+7. **Tiered discovery modes** - users choose depth based on project complexity and time available.
+
+8. **Task assessment drives questions** - low-scoring tasks become focus areas for refinement.
+
+9. **Claude folder is generated** - `.claude/rules/` and `claude.md` are created for better agent context.
+
+10. **Answers override existing docs** - when discovery answers conflict with existing specs, answers take precedence.
+
+## Related Commands
+
+- `/professor-frink:onboard` - Interactive codebase onboarding for humans
+- `/professor-frink:refine` - Incremental documentation updates
+- `/professor-frink:run` - Start autonomous task execution
+- `/professor-frink:status` - Check current progress
