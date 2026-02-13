@@ -29,6 +29,8 @@ export GITHUB_TOKEN=ghp_your_token_here
 
 # Install a specific plugin
 /plugin install example-versent-toolkit@versent-marketplace
+/plugin install professor-frink@versent-marketplace
+/plugin install worktree-manager@versent-marketplace
 
 # List installed plugins
 /plugin list
@@ -39,6 +41,8 @@ export GITHUB_TOKEN=ghp_your_token_here
 | Plugin | Version | Description |
 |--------|---------|-------------|
 | `example-versent-toolkit` | 1.0.0 | EXAMPLE: Template toolkit plugin - copy this to create your own |
+| `professor-frink` | 0.1.0 | Autonomous multi-session Claude Code plugin with HITL checkpoints, fresh context windows per task, and self-healing validation |
+| `worktree-manager` | 1.0.0 | Task management using git worktrees for parallel development with automated workspace isolation |
 
 ## Plugin Development Guide
 
