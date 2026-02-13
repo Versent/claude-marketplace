@@ -18,7 +18,7 @@ Task management using git worktrees for parallel development with automated work
 - **Team unblocking** - Push your WIP branch, let teammates review it, immediately switch to another worktree and continue
 - **Preserved context** - Come back tomorrow: `cd worktree-PROJ-123/` and your build state, tests, and WIP are exactly as you left them
 
-**When to use this skill:**
+**When to use this plugin:**
 
 - Starting new tickets/features/fixes
 - Urgent task arrives while you're mid-implementation
