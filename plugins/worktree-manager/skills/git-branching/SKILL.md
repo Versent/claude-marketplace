@@ -7,6 +7,23 @@ description: Creates Git branches following naming conventions (feature/PROJ-123
 
 Automatically create properly named Git branches following project conventions.
 
+## Use Cases
+
+**Why use standardized branch names:**
+
+- **Team consistency** - Everyone follows same pattern; no confusion about branch purpose
+- **Automation-friendly** - CI/CD pipelines can trigger based on prefix (feature/*, fix/*)
+- **Traceability** - Branch name links directly to ticket/issue for context
+- **Clear intent** - `fix/` vs `feature/` vs `refactor/` signals what changed
+- **Convention over memory** - No need to remember project standards; skill enforces them
+
+**When to invoke:**
+
+- Starting work on assigned tickets
+- Creating branches for features, fixes, refactors
+- Need to follow team/project naming standards
+- Integrating with worktree-manager for full automation
+
 ## Branch Naming Conventions
 
 ### Format Patterns

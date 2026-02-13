@@ -7,6 +7,23 @@ description: Task management using isolated git worktrees for parallel developme
 
 Automate task setup using git worktrees for parallel development workflows. Creates isolated environments for assigned tasks without disrupting current work.
 
+## Use Cases
+
+**Why use this skill:**
+
+- **Parallel work** - Open 3 terminals, work on 3 tickets simultaneously without context switching
+- **Human-agent collaboration** - Review code in one worktree while Claude implements in another
+- **No stashing** - Each worktree preserves uncommitted changes; switch terminals, not branches
+- **Team unblocking** - Push WIP, let teammates review, continue in a different worktree
+- **Preserved state** - Return to exact build/test/WIP state days later
+
+**When to invoke:**
+
+- Starting new tickets from Jira
+- Urgent task arrives mid-implementation
+- Before multi-session implementation plans
+- When tasks require different dependencies/builds
+
 ## Instructions
 
 When invoked with $ARGUMENTS:
