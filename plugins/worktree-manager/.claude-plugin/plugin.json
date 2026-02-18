@@ -1,0 +1,24 @@
+{
+  "name": "worktree-manager",
+  "version": "1.0.0",
+  "description": "Task management using git worktrees for parallel development with automated workspace isolation",
+  "author": {
+    "name": "Jesse Stanger"
+  },
+  "repository": "https://github.com/Versent/claude-marketplace",
+  "keywords": [
+    "git",
+    "worktree",
+    "workflow",
+    "automation",
+    "parallel-development",
+    "jira",
+    "atlassian"
+  ],
+  "mcpServers": {
+    "atlassian-mcp-server": {
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v1/mcp"
+    }
+  }
+}
