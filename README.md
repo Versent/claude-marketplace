@@ -196,4 +196,4 @@ When adding a plugin, add an entry to `.claude-plugin/marketplace.json`:
 
 ## License
 
-Internal use only - Versent Pty Ltd
+GNU General Public License (GPL)
